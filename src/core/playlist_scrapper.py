@@ -15,10 +15,10 @@ def choose_playlist_and_print_tracks(session: tidalapi.Session):
     liked_tracks = get_liked_tracks(session)
 
     if not playlists and not liked_tracks:
-        print("No playlists or liked tracks available.")
+        print("[Playlist Scrapper] No playlists or liked tracks available.")
         return
 
-    print("Your playlists:")
+    print("[Playlist Scrapper] Your playlists:")
     for i, pl in enumerate(playlists, start=1):
         print(f"{i}. {pl.name} (id: {pl.id})")
 
@@ -28,13 +28,13 @@ def choose_playlist_and_print_tracks(session: tidalapi.Session):
     while True:
         choice = input(f"Choose a playlist number (1-{liked_option_index}): ")
         if not choice.isdigit():
-            print("Please enter a number.")
+            print("[Playlist Scrapper] Please enter a number.")
             continue
         idx = int(choice)
         if 1 <= idx <= liked_option_index:
             break
         else:
-            print("Invalid number, please try again.")
+            print("[Playlist Scrapper] Invalid number, please try again.")
 
     if idx == liked_option_index:
         print("\nYour liked tracks:")
