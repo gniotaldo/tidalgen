@@ -106,10 +106,15 @@ class PlaylistListerScene(tk.Frame):
     def on_playlist_click(self, playlist):
         print(f"[PlaylistListerScene] Playlist '{playlist.name}' clicked.")
         self.controller.state.current_playlist = playlist
-
         if self.controller.state.is_tagging:
             # go to tagging scene
+            tagging_scene = self.controller.frames.get("tagging")
+            if tagging_scene:
+                tagging_scene.load_next_track()
             self.controller.show_frame("tagging")
         else:
             # go to playlist preview scene
+            playlist_scene = self.controller.frames.get("playlist_preview")
+            if playlist_scene:
+                playlist_scene.load_playlist(playlist)
             self.controller.show_frame("playlist_preview")

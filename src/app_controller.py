@@ -13,7 +13,7 @@ class AppController(tk.Tk):
         self.frames = {}
         self.current_frame = None
         self.title("Tidal Playlist Tool")
-        self.geometry("1280x720")
+        self.geometry("700x800")
 
         container = tk.Frame(self)
         container.pack(fill="both", expand=True)

@@ -27,14 +27,21 @@ class MainMenuScene(tk.Frame):
         self.controller.show_frame("playlist_lister")
 
     def start_tagging(self):
-        print("[MainMenuScene] Start tagging - not implemented yet")
-        self.controller.show_frame("playlist_lister")
+        print("[MainMenuScene] Start tagging...")
         self.controller.state.is_tagging = True
+        playlist_scene = self.controller.frames.get("playlist_lister")
+        if playlist_scene:
+            playlist_scene.load_playlists()
+
+        self.controller.show_frame("playlist_lister")
 
     def continue_tagging(self):
-        print("[MainMenuScene] Continue tagging - not implemented yet")
-        # load last tagging progress
-        # ...
+        print("[MainMenuScene] Loading last tagging progress...")
+        self.controller.state.load_from_file("appstate.json")
+        print(self.controller.state.current_playlist)
+        tagging_scene = self.controller.frames.get("tagging")
+        if tagging_scene:
+            tagging_scene.load_next_track()
         self.controller.show_frame("tagging")
 
     def playlist_generator(self):
