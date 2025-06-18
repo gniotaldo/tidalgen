@@ -9,11 +9,11 @@ class AppController(tk.Tk):
     def __init__(self, state):
         super().__init__()
 
-        self.state = state
+        self.app_state = state
         self.frames = {}
         self.current_frame = None
         self.title("Tidal Playlist Tool")
-        self.geometry("700x800")
+        self.state("zoomed")
 
         container = tk.Frame(self)
         container.pack(fill="both", expand=True)

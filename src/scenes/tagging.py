@@ -4,12 +4,111 @@ from PIL import Image, ImageTk
 import requests
 from io import BytesIO
 import tidalapi
+import ctypes
+import time
+
+
 
 class TaggingScene(tk.Frame):
-    GENRES = ["pop", "classic rock", "rap", "metal", "alt rock", "electronic", "other"]
-    TEMPOS = ["very slow", "slow", "normal", "fast", "very fast"]
-    TONES = ["heavy", "sharp", "bright", "dark", "warm", "mellow"]
-    MOODS = ["happy", "sad", "mysterious", "confusing", "energic", "calm", "melancholic"]
+    GENRES = [
+        "pop",
+        "classic rock",
+        "hard rock",
+        "alt rock",
+        "grunge",
+        "metal",
+        "rap",
+        "electronic",
+        "eurodisco",
+        "country",
+        "new wave",
+        "disco",
+        "other"
+    ]
+
+    TEMPOS = [
+        "very slow",
+        "slow",
+        "normal",
+        "fast",
+        "very fast"
+    ]
+
+    TONES = [
+        "heavy",
+        "sharp",
+        "bright",
+        "dark",
+        "warm",
+        "mellow",
+        "aggressive",
+        "dreamy"
+    ]
+
+    MOODS = [
+        "happy",
+        "sad",
+        "calm",
+        "energic",
+        "melancholic",
+        "mysterious",
+        "nostalgic",
+        "aggressive"
+    ]
+
+    VOCALS = [
+        "instrumental",
+        "male",
+        "female",
+        "group",
+        "duet",
+        "robotic",
+        "minimal",
+        "screaming"
+    ]
+
+    GUITAR_INTENSITY = [
+        "none",
+        "subtle",
+        "strong",
+        "dominant",
+        "solo-hero"
+    ]
+
+    SYNTH_PRESENCE = [
+        "none",
+        "subtle",
+        "dominant"
+    ]
+
+    PRODUCTION_STYLE = [
+        "raw",
+        "clean",
+        "lo-fi",
+        "modern",
+        "retro",
+        "wall-of-sound"
+    ]
+
+    ENERGY_LEVEL = [
+        "low",
+        "medium",
+        "high",
+        "explosive"
+    ]
+
+    USE_CASE = [
+        "driving",
+        "party",
+        "chill",
+        "workout",
+        "football",
+        "night",
+        "focus",
+        "beach"
+    ]
+
+
 
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -24,59 +123,66 @@ class TaggingScene(tk.Frame):
         self.album_label.pack(pady=5)
 
         # Rating
-        tk.Label(self, text="Rating (0-10):").pack()
+        tk.Label(self, text="Rating (0-10):").pack(pady=(10,0))
         self.rating_entry = tk.Entry(self)
-        self.rating_entry.pack()
+        self.rating_entry.pack(fill='x', padx=5, pady=2)
 
-        # Genres (multi)
-        tk.Label(self, text="Genres:").pack()
+        def create_checkboxes(label, options, var_dict):
+            tk.Label(self, text=label).pack(pady=(8,0))
+            frame_outer = tk.Frame(self)
+            frame_outer.pack(fill='x', padx=5)
+            frame_inner = tk.Frame(frame_outer)
+            frame_inner.pack()
+            for opt in options:
+                var = tk.BooleanVar()
+                cb = tk.Checkbutton(frame_inner, text=opt, variable=var)
+                cb.pack(side='left', padx=5, pady=2)
+                var_dict[opt] = var
 
-        genre_frame = tk.Frame(self)
-        genre_frame.pack(fill='x')
-
-        genre_inner_frame = tk.Frame(genre_frame)
-        genre_inner_frame.pack()
-
+        # Genres
         self.genre_vars = {}
-        for genre in self.GENRES:
-            var = tk.BooleanVar()
-            cb = tk.Checkbutton(genre_inner_frame, text=genre, variable=var)
-            cb.pack(side="left", padx=5)
-            self.genre_vars[genre] = var
+        create_checkboxes("Genres:", self.GENRES, self.genre_vars)
 
         # Tempo
-        tk.Label(self, text="Tempo:").pack()
-        self.tempo_var = tk.StringVar()
-        self.tempo_dropdown = ttk.Combobox(self, textvariable=self.tempo_var, values=self.TEMPOS, state="readonly")
-        self.tempo_dropdown.pack()
+        self.tempo_vars = {}
+        create_checkboxes("Tempo:", self.TEMPOS, self.tempo_vars)
 
         # Tone
-        tk.Label(self, text="Tone:").pack()
-        self.tone_var = tk.StringVar()
-        self.tone_dropdown = ttk.Combobox(self, textvariable=self.tone_var, values=self.TONES, state="readonly")
-        self.tone_dropdown.pack()
+        self.tone_vars = {}
+        create_checkboxes("Tone:", self.TONES, self.tone_vars)
 
-        # Mood (multi)
-        tk.Label(self, text="Mood:").pack()
-
-        mood_frame = tk.Frame(self)
-        mood_frame.pack(fill='x')
-
-        mood_inner_frame = tk.Frame(mood_frame)
-        mood_inner_frame.pack()
-
+        # Mood
         self.mood_vars = {}
-        for mood in self.MOODS:
-            var = tk.BooleanVar()
-            cb = tk.Checkbutton(mood_inner_frame, text=mood, variable=var)
-            cb.pack(side="left", padx=5)
-            self.mood_vars[mood] = var
+        create_checkboxes("Mood:", self.MOODS, self.mood_vars)
 
+        # Vocals
+        self.vocals_vars = {}
+        create_checkboxes("Vocals:", self.VOCALS, self.vocals_vars)
+
+        # Guitar Intensity
+        self.guitar_vars = {}
+        create_checkboxes("Guitar Intensity:", self.GUITAR_INTENSITY, self.guitar_vars)
+
+        # Synth Presence
+        self.synth_vars = {}
+        create_checkboxes("Synth Presence:", self.SYNTH_PRESENCE, self.synth_vars)
+
+        # Production Style
+        self.prod_vars = {}
+        create_checkboxes("Production Style:", self.PRODUCTION_STYLE, self.prod_vars)
+
+        # Energy Level
+        self.energy_vars = {}
+        create_checkboxes("Energy Level:", self.ENERGY_LEVEL, self.energy_vars)
+
+        # Use Case
+        self.usecase_vars = {}
+        create_checkboxes("Use Case:", self.USE_CASE, self.usecase_vars)
 
         # Comments
-        tk.Label(self, text="Comments:").pack()
-        self.comments_entry = tk.Text(self, height=4, width=40)
-        self.comments_entry.pack(pady=5)
+        tk.Label(self, text="Comments:").pack(pady=(8,0))
+        self.comments_entry = tk.Text(self, height=4, width=60)
+        self.comments_entry.pack(fill='x', padx=5, pady=2)
 
         # Buttons
         btn_frame = tk.Frame(self)
@@ -84,8 +190,15 @@ class TaggingScene(tk.Frame):
         tk.Button(btn_frame, text="Save & Continue", command=self.save_and_continue).pack(side="left", padx=10)
         tk.Button(btn_frame, text="Save & Exit", command=self.save_and_exit).pack(side="right", padx=10)
 
+        # Progress
+        self.progress_label = tk.Label(self, text="Progress: 0/0")
+        self.progress_label.pack(pady=5)
+
+    
+
     def load_next_track(self):
-        state = self.controller.state
+        self.progress_label.config(text=f"Progress: {self.controller.app_state.current_track_index + 1}/{len(self.controller.app_state.current_playlist.tracks())}")
+        state = self.controller.app_state
         if state.current_track_index >= len(state.current_playlist.tracks()):
             messagebox.showinfo("Done", "All tracks tagged!")
             return
@@ -107,30 +220,43 @@ class TaggingScene(tk.Frame):
             self.image_label.config(image='', text='[No image]')
 
     def collect_data(self):
-        track: tidalapi.Track = self.controller.state.current_playlist.tracks()[self.controller.state.current_track_index]
+        track: tidalapi.Track = self.controller.app_state.current_playlist.tracks()[self.controller.app_state.current_track_index]
         return {
-            "track_index": self.controller.state.current_track_index,
-            "track_id": track.id,
-            "track_name": track.name,
-            "artist_name": track.artist.name,
-            "album_name": track.album.name,
-            "rating": self.rating_entry.get(),
-            "genres": [g for g, var in self.genre_vars.items() if var.get()],
-            "tempo": self.tempo_var.get(),
-            "tone": self.tone_var.get(),
-            "mood": [m for m, var in self.mood_vars.items() if var.get()],
-            "comments": self.comments_entry.get("1.0", "end").strip(),
+            "track_index":      self.controller.app_state.current_track_index,
+            "track_id":         track.id,
+            "track_name":       track.name,
+            "artist_name":      track.artist.name,
+            "album_name":       track.album.name,
+            "rating":           self.rating_entry.get(),
+            "genres":           [g for g, var in self.genre_vars.items() if var.get()],
+            "tempo":            [t for t, var in self.tempo_vars.items() if var.get()],
+            "tone":             [t for t, var in self.tone_vars.items() if var.get()],
+            "mood":             [m for m, var in self.mood_vars.items() if var.get()],
+            "vocals":           [v for v, var in self.vocals_vars.items() if var.get()],
+            "guitar_intensity": [g for g, var in self.guitar_vars.items() if var.get()],
+            "synth_presence":   [s for s, var in self.synth_vars.items() if var.get()],
+            "production_style": [p for p, var in self.prod_vars.items() if var.get()],
+            "energy_level":     [e for e, var in self.energy_vars.items() if var.get()],
+            "use_case":         [u for u, var in self.usecase_vars.items() if var.get()],
+            "comments":         [c.strip() for c in self.comments_entry.get("1.0", "end").strip().split(",") if c.strip() != '']
         }
 
     def save_state(self):
         try:
-            self.controller.state.save_to_file("appstate.json")
+            self.controller.app_state.save_to_file("appstate.json")
             print("[TaggingScene] State saved")
         except Exception as e:
             print(f"[TaggingScene] Error saving state: {e}")
 
+    def press_key(self, hexKeyCode):
+        ctypes.windll.user32.keybd_event(hexKeyCode, 0, 0, 0) 
+        time.sleep(0.05)
+        ctypes.windll.user32.keybd_event(hexKeyCode, 0, 2, 0)    
+
     def save_and_continue(self):
         self.save()
+        self.press_key(0xB0)
+
         self.load_next_track()
 
     def save_and_exit(self):
@@ -138,16 +264,30 @@ class TaggingScene(tk.Frame):
         self.controller.quit()
 
     def save(self):
-        self.controller.state.tagged_tracks.append(self.collect_data())
-        self.controller.state.current_track_index += 1
+        self.controller.app_state.tagged_tracks.append(self.collect_data())
+        self.controller.app_state.current_track_index += 1
         self.save_state()
 
     def clear_fields(self):
         self.rating_entry.delete(0, tk.END)
         for var in self.genre_vars.values():
             var.set(False)
-        self.tempo_var.set('')
-        self.tone_var.set('')
+        for var in self.tempo_vars.values():
+            var.set(False)
+        for var in self.tone_vars.values():
+            var.set(False)
         for var in self.mood_vars.values():
+            var.set(False)
+        for var in self.vocals_vars.values():
+            var.set(False)
+        for var in self.guitar_vars.values():
+            var.set(False)
+        for var in self.synth_vars.values():
+            var.set(False)
+        for var in self.prod_vars.values():
+            var.set(False)
+        for var in self.energy_vars.values():
+            var.set(False)
+        for var in self.usecase_vars.values():
             var.set(False)
         self.comments_entry.delete("1.0", tk.END)

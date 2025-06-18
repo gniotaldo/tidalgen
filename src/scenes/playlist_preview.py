@@ -8,8 +8,8 @@ class PlaylistPreviewScene(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
-        self.images = []  # referencje do obrazków
-        self.track_images = []  # osobne referencje dla tracków
+        self.images = []
+        self.track_images = []
 
         self.playlist_image_label = tk.Label(self)
         self.playlist_image_label.pack(pady=(10, 5))
@@ -38,27 +38,25 @@ class PlaylistPreviewScene(tk.Frame):
         self.scrollbar.pack(side="right", fill="y")
 
     def load_playlist(self, playlist):
-        # Czyścimy wcześniejsze widgety i obrazy
         for widget in self.track_frame.winfo_children():
             widget.destroy()
         self.images.clear()
         self.track_images.clear()
 
-        # Obrazek playlisty
         try:
             img_url = playlist.image(dimensions=640)
             response = requests.get(img_url)
             pil_img = Image.open(BytesIO(response.content)).resize((50, 50), Image.Resampling.LANCZOS)
             img = ImageTk.PhotoImage(pil_img)
             self.playlist_image_label.configure(image=img)
-            self.playlist_image_label.image = img  # zachowaj referencję
+            self.playlist_image_label.image = img
         except Exception as e:
             print(f"[PlaylistPreviewScene] Cannot load playlist image: {e}")
             self.playlist_image_label.configure(image='', text='[No image]')
 
-        self.playlist_name_label.configure(text=playlist.name)
+        name = playlist.name if hasattr(playlist, 'name') else "Favorite tracks"
+        self.playlist_name_label.configure(text=name)
 
-        # Załaduj tracki
         try:
             tracks = playlist.tracks()
         except Exception as e:
@@ -69,7 +67,6 @@ class PlaylistPreviewScene(tk.Frame):
             frame = tk.Frame(self.track_frame, bd=1, relief="solid", padx=5, pady=5)
             frame.pack(fill="x", padx=10, pady=5)
 
-            # Miniaturka albumu
             try:
                 album_img_url = track.album.image(160)
                 response = requests.get(album_img_url)
@@ -81,7 +78,6 @@ class PlaylistPreviewScene(tk.Frame):
             except Exception as e:
                 print(f"[PlaylistPreviewScene] Cannot load album image: {e}")
 
-            # Info o utworze
             text = f"{track.artist.name} - {track.name} {track.duration}"
             label = tk.Label(frame, text=text, font=("Arial", 12), anchor="w", justify="left")
             label.pack(side="left", fill="x", expand=True)

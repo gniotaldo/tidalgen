@@ -28,7 +28,7 @@ class MainMenuScene(tk.Frame):
 
     def start_tagging(self):
         print("[MainMenuScene] Start tagging...")
-        self.controller.state.is_tagging = True
+        self.controller.app_state.is_tagging = True
         playlist_scene = self.controller.frames.get("playlist_lister")
         if playlist_scene:
             playlist_scene.load_playlists()
@@ -37,8 +37,8 @@ class MainMenuScene(tk.Frame):
 
     def continue_tagging(self):
         print("[MainMenuScene] Loading last tagging progress...")
-        self.controller.state.load_from_file("appstate.json")
-        print(self.controller.state.current_playlist)
+        self.controller.app_state.load_from_file("appstate.json")
+        print(self.controller.app_state.current_playlist)
         tagging_scene = self.controller.frames.get("tagging")
         if tagging_scene:
             tagging_scene.load_next_track()

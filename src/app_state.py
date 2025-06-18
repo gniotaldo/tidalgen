@@ -11,8 +11,15 @@ class AppState:
         self.is_tagging = False
 
     def save_to_file(self, filepath):
+        if not self.current_playlist:
+            pl_id = None
+        elif hasattr(self.current_playlist, 'id'):
+            pl_id = self.current_playlist.id
+        else:
+            pl_id = -1
+
         data = {
-            "current_playlist_id": self.current_playlist.id if self.current_playlist else None,
+            "current_playlist_id": pl_id,
             "current_track_index": self.current_track_index,
             "tagged_tracks": self.tagged_tracks,
         }
@@ -25,7 +32,10 @@ class AppState:
             data = json.load(f)
         self.user_playlists = get_all_playlists(self.session)
         playlist_id = data.get("current_playlist_id")
-        self.current_playlist = next((pl for pl in self.user_playlists if pl.id == playlist_id), None)
+        if playlist_id == -1:
+            self.current_playlist = self.session.user.favorites
+        else:
+            self.current_playlist = next((pl for pl in self.user_playlists if pl.id == playlist_id), None)
         print(self.current_playlist)
 
         self.current_track_index = data.get("current_track_index", 0)

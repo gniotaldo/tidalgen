@@ -37,8 +37,8 @@ class PlaylistListerScene(tk.Frame):
             self.resize_job = self.after(300, self.render_playlists)
 
     def load_playlists(self):
-        self.playlists = get_all_playlists(self.controller.state.session)
-
+        self.playlists = [self.controller.app_state.session.user.favorites]
+        self.playlists.extend(get_all_playlists(self.controller.app_state.session))
         self.render_playlists()
 
     def calculate_columns(self):
@@ -82,14 +82,16 @@ class PlaylistListerScene(tk.Frame):
                 command=lambda: self.on_playlist_click(playlist)
             )
         else:
+            name = playlist.name if hasattr(playlist, 'name') else "Favorites Tracks"
             return tk.Button(
                 self.frame,
-                text=playlist.name,
+                text=name,
                 font=("Arial", 12),
                 width=15,
                 height=7,
                 wraplength=110,
-                padx=5, pady=5
+                padx=5, pady=5,
+                command=lambda: self.on_playlist_click(playlist)
             )
 
     def load_playlist_image(self, playlist):
@@ -101,12 +103,13 @@ class PlaylistListerScene(tk.Frame):
             self.images.append(img)
             return img
         except Exception as e:
-            print(f"[PlaylistListerScene] Failed to load image for playlist '{playlist.name}': {e}")
+            print(f"[PlaylistListerScene] Failed to load image for playlist: {e}")
             return None
+        
     def on_playlist_click(self, playlist):
-        print(f"[PlaylistListerScene] Playlist '{playlist.name}' clicked.")
-        self.controller.state.current_playlist = playlist
-        if self.controller.state.is_tagging:
+        print(f"[PlaylistListerScene] Playlist clicked.")
+        self.controller.app_state.current_playlist = playlist
+        if self.controller.app_state.is_tagging:
             # go to tagging scene
             tagging_scene = self.controller.frames.get("tagging")
             if tagging_scene:

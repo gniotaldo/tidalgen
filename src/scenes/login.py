@@ -18,9 +18,9 @@ class LoginScene(tk.Frame):
 
     def on_login_click(self):
         print("[LoginScene] Logging in...")
-        self.controller.state.session = auth.authorize_tidal()
+        self.controller.app_state.session = auth.authorize_tidal()
 
-        if self.controller.state.session is not None:
+        if self.controller.app_state.session is not None:
             print("[LoginScene] Session acquired. Redirecting to Main Menu...")
             self.controller.show_frame("main_menu")
         else:
