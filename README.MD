@@ -1,3 +1,5 @@
+A tool for tagging tracks, and generating playlists basing on tags
+
 How to start tagging:
 1. Press "Login",
 1b. If login required web browser will popup, follow the steps shown here,
