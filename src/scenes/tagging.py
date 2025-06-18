@@ -113,87 +113,167 @@ class TaggingScene(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
-        self.image_label = tk.Label(self)
-        self.image_label.pack(pady=10)
+        
+        canvas = tk.Canvas(self)
+        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+        
+        self.canvas = canvas
+        self.scrollable_frame = scrollable_frame
+        self.canvas_window = None
+        
+        def configure_scroll_region(event=None):
+            canvas.update_idletasks()
+            bbox = canvas.bbox("all")
+            canvas_height = canvas.winfo_height()
+            
+            if bbox and canvas_height > 1:
+                content_height = bbox[3] - bbox[1]
+                if content_height <= canvas_height:
+                    canvas.configure(scrollregion=(0, 0, 0, 0))
+                    canvas.unbind_all("<MouseWheel>")
+                    return
+                else:
+                    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            
+            canvas.configure(scrollregion=bbox)
+            canvas.after_idle(center_content)
+        
+        def center_content():
+            canvas.update_idletasks()
+            canvas_width = canvas.winfo_width()
+            frame_width = scrollable_frame.winfo_reqwidth()
+            
+            if canvas_width > 1:
+                x_position = max(0, (canvas_width - frame_width) // 2)
+                if self.canvas_window:
+                    canvas.coords(self.canvas_window, x_position, 0)
+        
+        self.canvas_window = canvas.create_window(0, 0, window=scrollable_frame, anchor="n")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        scrollable_frame.bind("<Configure>", configure_scroll_region)
+        canvas.bind("<Configure>", lambda e: canvas.after_idle(center_content))
+        
+        self.bind("<Map>", lambda e: canvas.after_idle(center_content))
+        canvas.bind("<Visibility>", lambda e: canvas.after_idle(center_content))
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+    
+        self.after(100, center_content)
+        
+        # LAYOUT
+        # TOP CENTER
+        # Image
+        self.image_label = tk.Label(scrollable_frame)
+        self.image_label.pack(pady=5)
 
-        self.title_label = tk.Label(self, font=("Arial", 16, "bold"))
+        # Track
+        self.title_label = tk.Label(scrollable_frame, font=("Arial", 16, "bold"))
         self.title_label.pack()
 
-        self.album_label = tk.Label(self, font=("Arial", 12))
+        # Album
+        self.album_label = tk.Label(scrollable_frame, font=("Arial", 12))
         self.album_label.pack(pady=5)
 
-        # Rating
-        tk.Label(self, text="Rating (0-10):").pack(pady=(10,0))
-        self.rating_entry = tk.Entry(self)
-        self.rating_entry.pack(fill='x', padx=5, pady=2)
+        # MAIN CONTAINER
+        main_container = tk.Frame(scrollable_frame)
+        main_container.pack(fill='both', expand=True, padx=10, pady=10)
 
-        def create_checkboxes(label, options, var_dict):
-            tk.Label(self, text=label).pack(pady=(8,0))
-            frame_outer = tk.Frame(self)
+        left_column = tk.Frame(main_container)
+        left_column.grid(row=0, column=0, sticky='nsew', padx=5)
+        
+        middle_column = tk.Frame(main_container)
+        middle_column.grid(row=0, column=1, sticky='nsew', padx=5)
+        
+        right_column = tk.Frame(main_container)
+        right_column.grid(row=0, column=2, sticky='nsew', padx=5)
+
+        main_container.grid_columnconfigure(0, weight=1)
+        main_container.grid_columnconfigure(1, weight=1)
+        main_container.grid_columnconfigure(2, weight=1)
+
+        def create_checkboxes(parent, label, options, var_dict, max_per_row=2):
+            tk.Label(parent, text=label, width=20, anchor='w').pack(pady=(8, 0))
+            
+            frame_outer = tk.Frame(parent)
             frame_outer.pack(fill='x', padx=5)
             frame_inner = tk.Frame(frame_outer)
             frame_inner.pack()
-            for opt in options:
+            frame_inner.config(width=280)
+            frame_inner.pack_propagate(False)
+
+            for i, opt in enumerate(options):
                 var = tk.BooleanVar()
-                cb = tk.Checkbutton(frame_inner, text=opt, variable=var)
-                cb.pack(side='left', padx=5, pady=2)
+                cb = tk.Checkbutton(frame_inner, text=opt, variable=var, width=15, anchor='w')
+                row = i // max_per_row
+                col = i % max_per_row
+                cb.grid(row=row, column=col, padx=2, pady=2, sticky='w')
                 var_dict[opt] = var
 
-        # Genres
+            for col in range(max_per_row):
+                frame_inner.grid_columnconfigure(col, weight=1, minsize=130, uniform="checkbox_uniform")
+
+        # LEFT COLUMN
+        rating_label = tk.Label(left_column, text="Rating (0-10):", width=20, anchor='w')
+        rating_label.pack(pady=(10,0))
+        self.rating_entry = tk.Entry(left_column, width=35)
+        self.rating_entry.pack(padx=(5, 60), pady=2)
+
         self.genre_vars = {}
-        create_checkboxes("Genres:", self.GENRES, self.genre_vars)
+        create_checkboxes(left_column, "Genres:", self.GENRES, self.genre_vars)
 
-        # Tempo
         self.tempo_vars = {}
-        create_checkboxes("Tempo:", self.TEMPOS, self.tempo_vars)
+        create_checkboxes(left_column, "Tempo:", self.TEMPOS, self.tempo_vars)
 
-        # Tone
         self.tone_vars = {}
-        create_checkboxes("Tone:", self.TONES, self.tone_vars)
+        create_checkboxes(left_column, "Tone:", self.TONES, self.tone_vars)
 
-        # Mood
+        # MIDDLE COLUMN
         self.mood_vars = {}
-        create_checkboxes("Mood:", self.MOODS, self.mood_vars)
+        create_checkboxes(middle_column, "Mood:", self.MOODS, self.mood_vars)
 
-        # Vocals
         self.vocals_vars = {}
-        create_checkboxes("Vocals:", self.VOCALS, self.vocals_vars)
+        create_checkboxes(middle_column, "Vocals:", self.VOCALS, self.vocals_vars)
 
-        # Guitar Intensity
         self.guitar_vars = {}
-        create_checkboxes("Guitar Intensity:", self.GUITAR_INTENSITY, self.guitar_vars)
+        create_checkboxes(middle_column, "Guitar Intensity:", self.GUITAR_INTENSITY, self.guitar_vars)
 
-        # Synth Presence
         self.synth_vars = {}
-        create_checkboxes("Synth Presence:", self.SYNTH_PRESENCE, self.synth_vars)
+        create_checkboxes(middle_column, "Synth Presence:", self.SYNTH_PRESENCE, self.synth_vars)
 
-        # Production Style
+        # RIGHT COLUMN
         self.prod_vars = {}
-        create_checkboxes("Production Style:", self.PRODUCTION_STYLE, self.prod_vars)
+        create_checkboxes(right_column, "Production Style:", self.PRODUCTION_STYLE, self.prod_vars)
 
-        # Energy Level
         self.energy_vars = {}
-        create_checkboxes("Energy Level:", self.ENERGY_LEVEL, self.energy_vars)
+        create_checkboxes(right_column, "Energy Level:", self.ENERGY_LEVEL, self.energy_vars)
 
-        # Use Case
         self.usecase_vars = {}
-        create_checkboxes("Use Case:", self.USE_CASE, self.usecase_vars)
+        create_checkboxes(right_column, "Use Case:", self.USE_CASE, self.usecase_vars)
 
+        # BOTTOM SECTION
         # Comments
-        tk.Label(self, text="Comments:").pack(pady=(8,0))
-        self.comments_entry = tk.Text(self, height=4, width=60)
-        self.comments_entry.pack(fill='x', padx=5, pady=2)
+        comments_frame = tk.Frame(scrollable_frame)
+        comments_frame.pack(fill='x', padx=10, pady=5)
+        tk.Label(comments_frame, text="Comments:").pack(pady=(8,0))
+        self.comments_entry = tk.Text(comments_frame, height=4, width=60)
+        self.comments_entry.pack(padx=5, pady=2)
 
         # Buttons
-        btn_frame = tk.Frame(self)
+        btn_frame = tk.Frame(scrollable_frame)
         btn_frame.pack(pady=10)
         tk.Button(btn_frame, text="Save & Continue", command=self.save_and_continue).pack(side="left", padx=10)
         tk.Button(btn_frame, text="Save & Exit", command=self.save_and_exit).pack(side="right", padx=10)
 
         # Progress
-        self.progress_label = tk.Label(self, text="Progress: 0/0")
+        self.progress_label = tk.Label(scrollable_frame, text="Progress: 0/0")
         self.progress_label.pack(pady=5)
-
     
 
     def load_next_track(self):
@@ -201,6 +281,8 @@ class TaggingScene(tk.Frame):
         state = self.controller.app_state
         if state.current_track_index >= len(state.current_playlist.tracks()):
             messagebox.showinfo("Done", "All tracks tagged!")
+            self.controller.app_state.is_tagging = False
+            self.controller.show_frame("main_menu")
             return
 
         self.clear_fields()
@@ -270,24 +352,18 @@ class TaggingScene(tk.Frame):
 
     def clear_fields(self):
         self.rating_entry.delete(0, tk.END)
-        for var in self.genre_vars.values():
-            var.set(False)
-        for var in self.tempo_vars.values():
-            var.set(False)
-        for var in self.tone_vars.values():
-            var.set(False)
-        for var in self.mood_vars.values():
-            var.set(False)
-        for var in self.vocals_vars.values():
-            var.set(False)
-        for var in self.guitar_vars.values():
-            var.set(False)
-        for var in self.synth_vars.values():
-            var.set(False)
-        for var in self.prod_vars.values():
-            var.set(False)
-        for var in self.energy_vars.values():
-            var.set(False)
-        for var in self.usecase_vars.values():
-            var.set(False)
+        for var_group in [
+            self.genre_vars,
+            self.tempo_vars,
+            self.tone_vars,
+            self.mood_vars,
+            self.vocals_vars,
+            self.guitar_vars,
+            self.synth_vars,
+            self.prod_vars,
+            self.energy_vars,
+            self.usecase_vars
+        ]:
+            for var in var_group.values():
+                var.set(False)
         self.comments_entry.delete("1.0", tk.END)

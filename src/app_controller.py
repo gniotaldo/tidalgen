@@ -8,12 +8,12 @@ from scenes.tagging import TaggingScene
 class AppController(tk.Tk):
     def __init__(self, state):
         super().__init__()
-
         self.app_state = state
         self.frames = {}
         self.current_frame = None
         self.title("Tidal Playlist Tool")
         self.state("zoomed")
+        self.minsize(900, 600)
 
         container = tk.Frame(self)
         container.pack(fill="both", expand=True)

@@ -29,6 +29,8 @@ class MainMenuScene(tk.Frame):
     def start_tagging(self):
         print("[MainMenuScene] Start tagging...")
         self.controller.app_state.is_tagging = True
+        self.controller.app_state.current_track_index = 0
+        self.controller.app_state.tagged_tracks = []
         playlist_scene = self.controller.frames.get("playlist_lister")
         if playlist_scene:
             playlist_scene.load_playlists()
@@ -40,9 +42,11 @@ class MainMenuScene(tk.Frame):
         self.controller.app_state.load_from_file("appstate.json")
         print(self.controller.app_state.current_playlist)
         tagging_scene = self.controller.frames.get("tagging")
+        self.controller.app_state.is_tagging = True
         if tagging_scene:
             tagging_scene.load_next_track()
-        self.controller.show_frame("tagging")
+        if self.controller.app_state.is_tagging:
+            self.controller.show_frame("tagging")
 
     def playlist_generator(self):
         print("[MainMenuScene] Playlist generator - not implemented yet")
