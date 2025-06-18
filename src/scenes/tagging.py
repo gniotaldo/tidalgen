@@ -52,7 +52,6 @@ class TaggingScene(tk.Frame):
         "energic",
         "melancholic",
         "mysterious",
-        "nostalgic",
         "aggressive"
     ]
 
