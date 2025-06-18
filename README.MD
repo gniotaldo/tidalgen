@@ -1,8 +1,7 @@
 A tool for tagging tracks, and generating playlists basing on tags
 
 How to start tagging:
-1. Press "Login",
-1b. If login required web browser will popup, follow the steps shown here,
+1. Press "Login", (if login required, web browser will popup)
 2. Press "Start Tagging",
 3. Select playlist you want tracks to be tagged,
 4. Open tidal and play playlist you've selected in step 3 (1st track from playlist, no shuffle),
